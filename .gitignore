@@ -29,3 +29,20 @@
 Homestead.json
 Homestead.yaml
 Thumbs.db
+# accidental junk files
+*, 
+; 
+ave();
+Movie::latest()->first()->first()->status;
+Video::find(9);
+[array],
+[boolean],
+[integer,
+[nullable,
+[required,
+no-cache,
+no-store, no-cache, must-revalidate, max-age=0,
+null,
+processing,
+tatus = ready
+
