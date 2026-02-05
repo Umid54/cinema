@@ -4,9 +4,8 @@
     <meta charset="UTF-8">
     <title>@yield('title', 'Личный кабинет')</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
-
+    @vite(['resources/css/app.css', 'resources/js/app.js'])
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <link rel="stylesheet" href="{{ asset('css/player.css') }}">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/plyr@3.7.8/dist/plyr.css">
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 

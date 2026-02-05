@@ -114,3 +114,63 @@
         column-gap: 1rem;
     }
 }
+/* ======================================================
+   📸 SCREENSHOTS — FINAL FIX (NO GAP COLLAPSE)
+   ====================================================== */
+
+/* ❌ ВАЖНО: глобально grid НЕ ТРОГАЕМ
+   (если где-то есть .grid { gap: inherit; } — УДАЛИТЬ)
+*/
+
+/* Сетка скриншотов */
+.movie-shell .screenshots-grid {
+    display: grid;
+    gap: 1.25rem; /* 20px — mobile */
+}
+
+@media (min-width: 768px) {
+    .movie-shell .screenshots-grid {
+        gap: 1.5rem; /* 24px — desktop */
+    }
+}
+
+/* Карточка скриншота — НЕ ВЛИЯЕТ на gap */
+.screenshot-thumb {
+    display: block;
+    position: relative;
+    box-sizing: border-box;
+
+    margin: 0;
+    padding: 0;
+}
+
+/* Внутренности карточки */
+.screenshot-thumb > * {
+    display: block;
+}
+
+/* Страховка от старых space-x / отрицательных margin */
+.screenshot-thumb,
+.screenshot-thumb * {
+    margin-left: 0;
+    margin-right: 0;
+}
+/* ======================================================
+   📸 SCREENSHOTS — FINAL SIZE CONTROL
+   ====================================================== */
+
+.screenshot-thumb {
+    width: 100%;
+    max-width: 290px; /* ← ЭТАЛОННЫЙ РАЗМЕР */
+}
+
+@media (min-width: 1024px) {
+    .screenshot-thumb {
+        max-width: 220px;
+    }
+}
+
+.screenshot-frame {
+    width: 100%;
+    aspect-ratio: 16 / 9;
+}
