@@ -1,15 +1,37 @@
 @extends('layouts.user-hud')
 
+@section('title', $title ?? 'Сериалы')
+
 @section('content')
 <div class="max-w-7xl mx-auto px-6 py-10">
 
+    {{-- BREADCRUMBS --}}
+    <div class="text-sm text-neutral-400 mb-6">
+        <a href="{{ route('home') }}" class="hover:text-cyan-300">Главная</a>
+        <span class="mx-2">/</span>
+        <span class="text-neutral-300">Сериалы</span>
+
+        @isset($title)
+            <span class="mx-2">/</span>
+            <span class="text-neutral-300">{{ $title }}</span>
+        @endisset
+    </div>
+
+    {{-- TITLE --}}
     <h1 class="text-3xl font-bold text-cyan-300 mb-8 tracking-wide">
-        🎬 Сериалы
+        {{ mb_strtoupper($title ?? 'Сериалы') }}
     </h1>
 
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
 
         @forelse ($series as $item)
+
+            @php
+                $user = auth()->user();
+                $isPremium = $user && ($user->is_premium_active || $user->is_trial);
+                $isAdmin = $user && method_exists($user, 'isAdmin') && $user->isAdmin();
+            @endphp
+
             <div
                 class="relative bg-neutral-900/60 backdrop-blur
                        border border-neutral-800 rounded-xl
@@ -22,12 +44,13 @@
                     @if($isPremium)
                         <form method="POST"
                               action="{{ route('favorites.toggle', ['movie' => $item->id]) }}"
-                              class="absolute top-3 right-3 z-20">
+                              class="absolute top-3 right-3 z-20"
+                              onclick="event.stopPropagation()">
                             @csrf
                             <button
                                 type="submit"
                                 class="text-2xl transition
-                                {{ auth()->user()->hasFavorited($item)
+                                {{ $item->is_favorited
                                     ? 'text-rose-400'
                                     : 'text-neutral-400 hover:text-rose-300' }}"
                                 title="В избранное"
@@ -41,9 +64,9 @@
                 {{-- POSTER --}}
                 <div class="relative aspect-[2/3] bg-neutral-800 overflow-hidden">
 
-                    @if($item->poster)
+                    @if($item->poster_url)
                         <img
-                            src="{{ $item->poster }}"
+                            src="{{ $item->poster_url }}"
                             alt="{{ $item->title }}"
                             class="w-full h-full object-cover
                                    group-hover:scale-105 transition"
@@ -55,12 +78,12 @@
                         </div>
                     @endif
 
-                    {{-- ▶ ПРОДОЛЖИТЬ (OVERLAY, PREMIUM / TRIAL ONLY) --}}
+                    {{-- ▶ ПРОДОЛЖИТЬ (PREMIUM / TRIAL ONLY) --}}
                     @auth
                         @if($isPremium && $item->watchProgress)
                             <a
                                 href="{{ route('series.watch', [
-                                    'movie'   => $item->id,
+                                    'series'  => $item->id,
                                     'season'  => $item->watchProgress->season,
                                     'episode' => $item->watchProgress->episode,
                                 ]) }}"
@@ -74,7 +97,7 @@
                                             bg-emerald-500/20
                                             border border-emerald-400/40
                                             text-emerald-300 font-semibold
-                                            shadow-[0_0_25px_rgba(52,211,153,0.6)]
+                                            shadow-[0_0_25px_rgba(52,211,153,.6)]
                                             text-center">
                                     ▶ Продолжить
                                     <span class="block text-xs opacity-70">
@@ -103,12 +126,11 @@
                 <div class="p-4 pt-0 flex gap-2">
 
                     @auth
-                        {{-- 👑 PREMIUM / TRIAL --}}
                         @if($isPremium)
                             @if($item->watchProgress)
                                 <a
                                     href="{{ route('series.watch', [
-                                        'movie'   => $item->id,
+                                        'series'  => $item->id,
                                         'season'  => $item->watchProgress->season,
                                         'episode' => $item->watchProgress->episode,
                                     ]) }}"
@@ -119,7 +141,7 @@
                             @else
                                 <a
                                     href="{{ route('series.watch', [
-                                        'movie'   => $item->id,
+                                        'series'  => $item->id,
                                         'season'  => 1,
                                         'episode' => 1,
                                     ]) }}"
@@ -129,10 +151,9 @@
                                 </a>
                             @endif
                         @else
-                            {{-- FREE --}}
                             <a
                                 href="{{ route('series.watch', [
-                                    'movie'   => $item->id,
+                                    'series'  => $item->id,
                                     'season'  => 1,
                                     'episode' => 1,
                                 ]) }}"
@@ -142,28 +163,15 @@
                             </a>
                         @endif
                     @else
-                        {{-- GUEST --}}
-                        <a
-                            href="{{ route('login') }}"
-                            class="btn btn-sky w-full text-center"
-                        >
+                        <a href="{{ route('login') }}"
+                           class="btn btn-sky w-full text-center">
                             🔒 Войти
                         </a>
                     @endauth
 
-                    {{-- ADMIN --}}
-                    @if($isAdmin && Route::has('admin.series.edit'))
-                        <a
-                            href="{{ route('admin.series.edit', $item->id) }}"
-                            class="btn btn-ghost-white px-3"
-                            title="Редактировать"
-                        >
-                            ✏️
-                        </a>
-                    @endif
-
                 </div>
             </div>
+
         @empty
             <div class="col-span-full text-center text-neutral-500 py-20">
                 Сериалы не найдены
@@ -171,5 +179,13 @@
         @endforelse
 
     </div>
+
+    {{-- PAGINATION --}}
+    @if(method_exists($series, 'links'))
+        <div class="mt-16">
+            {{ $series->links() }}
+        </div>
+    @endif
+
 </div>
 @endsection

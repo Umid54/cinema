@@ -1,11 +1,23 @@
 @extends('layouts.user-hud')
 
-@section('title', 'Фильмы')
+@section('title', $title ?? 'Фильмы')
 
 @section('content')
 
+{{-- BREADCRUMBS --}}
+<div class="text-sm text-slate-400 mb-6">
+    <a href="{{ route('home') }}" class="hover:text-cyan-300">Главная</a>
+    <span class="mx-2">/</span>
+    <a href="{{ route('movies.index') }}" class="hover:text-cyan-300">Фильмы</a>
+
+    @isset($title)
+        <span class="mx-2">/</span>
+        <span class="text-slate-300">{{ $title }}</span>
+    @endisset
+</div>
+
 <h1 class="text-4xl font-bold text-cyan-400 mb-12 tracking-widest">
-    ФИЛЬМЫ
+    {{ mb_strtoupper($title ?? 'Фильмы') }}
 </h1>
 
 {{-- GUEST NOTICE --}}
@@ -31,7 +43,6 @@
 @php
     $video = $movie->video ?? null;
 
-    // MP4-preview — чисто визуальный бонус
     $canPreview =
         auth()->check() &&
         $video &&
@@ -43,8 +54,7 @@
     $isBlocked = in_array($movie->status, ['draft', 'blocked']);
 @endphp
 
-<div class="group relative block
-            {{ $isReady ? '' : 'pointer-events-none opacity-70' }}">
+<div class="group relative block {{ $isReady ? '' : 'pointer-events-none opacity-70' }}">
 
     @if($isReady)
         <a href="{{ route('movies.watch', $movie) }}" class="absolute inset-0 z-10"></a>
@@ -92,10 +102,8 @@
         {{-- MEDIA --}}
         <div class="relative w-full aspect-[2/3]">
 
-            {{-- SKELETON --}}
             <div class="absolute inset-0 skeleton"></div>
 
-            {{-- POSTER --}}
             <img
                 src="{{ $movie->poster_url }}"
                 alt="{{ $movie->title }}"
@@ -105,53 +113,41 @@
                        transition-opacity duration-300
                        {{ $canPreview && $isReady ? 'group-hover:opacity-0' : '' }}">
 
-            {{-- VIDEO PREVIEW (mp4) --}}
             @if($canPreview && $isReady)
                 <video
                     class="absolute inset-0 w-full h-full object-cover
                            opacity-0 group-hover:opacity-100
                            transition-opacity duration-300"
-                    muted
-                    loop
-                    playsinline
-                    preload="none"
+                    muted loop playsinline preload="none"
                     onmouseenter="this.play()"
                     onmouseleave="this.pause(); this.currentTime = 0;">
                     <source src="{{ asset($video->path) }}" type="video/mp4">
                 </video>
             @endif
 
-            {{-- OVERLAY --}}
             <div class="absolute inset-0 bg-black/40"></div>
 
-            {{-- STATUS LABEL --}}
             @if($isProcessing)
                 <div class="absolute inset-0 flex items-center justify-center z-20">
-                    <span class="px-4 py-2 rounded-xl bg-black/70 text-cyan-300 text-sm tracking-wide">
+                    <span class="px-4 py-2 rounded-xl bg-black/70 text-cyan-300 text-sm">
                         🎬 Конвертация…
                     </span>
                 </div>
             @elseif($isBlocked)
                 <div class="absolute inset-0 flex items-center justify-center z-20">
-                    <span class="px-4 py-2 rounded-xl bg-black/70 text-rose-400 text-sm tracking-wide">
+                    <span class="px-4 py-2 rounded-xl bg-black/70 text-rose-400 text-sm">
                         ⛔ Недоступно
                     </span>
                 </div>
             @endif
 
-            {{-- PLAY ICON --}}
             @if($isReady)
                 <div class="absolute inset-0 flex items-center justify-center
                             pointer-events-none opacity-0 group-hover:opacity-100 transition z-20">
-
                     <div class="w-16 h-16 rounded-full bg-cyan-400/10 backdrop-blur
                                 border border-cyan-400/60 flex items-center justify-center
-                                shadow-[0_0_25px_rgba(34,211,238,.6)]
-                                group-hover:shadow-[0_0_45px_rgba(34,211,238,.9)]
-                                transition">
-
-                        <svg class="w-8 h-8 text-cyan-300 ml-1
-                                    drop-shadow-[0_0_6px_rgba(34,211,238,.9)]"
+                                shadow-[0_0_25px_rgba(34,211,238,.6)]">
+                        <svg class="w-8 h-8 text-cyan-300 ml-1"
                              viewBox="0 0 24 24" fill="currentColor">
                             <path d="M8 5v14l11-7z"/>
                         </svg>
@@ -159,7 +155,6 @@
                 </div>
             @endif
 
-            {{-- AGE --}}
             <div class="absolute bottom-3 right-3 text-[11px]
                         px-2 py-0.5 rounded-md bg-black/60 text-slate-300 z-30">
                 18+

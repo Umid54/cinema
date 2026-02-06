@@ -26,16 +26,58 @@ use App\Http\Controllers\Admin\AdminDashboardController;
 
 /*
 |--------------------------------------------------------------------------
-| Public pages
+| 🌍 Public pages
 |--------------------------------------------------------------------------
 */
 Route::get('/', [HomeController::class, 'index'])->name('home');
 
-Route::get('/movies', [FrontMovieController::class, 'index'])
-    ->name('movies.index');
+/*
+|--------------------------------------------------------------------------
+| 🎬 Movies (base + navigation)
+|--------------------------------------------------------------------------
+*/
+Route::prefix('movies')->name('movies.')->group(function () {
 
-Route::get('/series', [SeriesController::class, 'index'])
-    ->name('series.index');
+    // Base list
+    Route::get('/', [FrontMovieController::class, 'index'])
+        ->name('index');
+
+    // Navigation
+    Route::get('/new', [FrontMovieController::class, 'new'])
+        ->name('new');
+
+    Route::get('/popular', [FrontMovieController::class, 'popular'])
+        ->name('popular');
+
+    Route::get('/genre/{genre}', [FrontMovieController::class, 'genre'])
+        ->name('genre');
+
+    Route::get('/year/{year}', [FrontMovieController::class, 'year'])
+        ->whereNumber('year')
+        ->name('year');
+});
+
+/*
+|--------------------------------------------------------------------------
+| 📺 Series (base + navigation)
+|--------------------------------------------------------------------------
+*/
+Route::prefix('series')->name('series.')->group(function () {
+
+    // Base list
+    Route::get('/', [SeriesController::class, 'index'])
+        ->name('index');
+
+    // Navigation
+    Route::get('/new', [SeriesController::class, 'new'])
+        ->name('new');
+
+    Route::get('/popular', [SeriesController::class, 'popular'])
+        ->name('popular');
+
+    Route::get('/genre/{genre}', [SeriesController::class, 'genre'])
+        ->name('genre');
+});
 
 /*
 |--------------------------------------------------------------------------
@@ -49,8 +91,6 @@ Route::get('/watch/{movie}', [FrontMovieController::class, 'watch'])
 /*
 |--------------------------------------------------------------------------
 | 📡 HLS STREAM — MOVIES
-| ❗ БЕЗ auth/premium middleware
-| ❗ Проверка доступа ТОЛЬКО в MovieStreamController
 |--------------------------------------------------------------------------
 */
 Route::get(
@@ -116,7 +156,7 @@ Route::post('/episodes/{episode}/watch', function (
 
 /*
 |--------------------------------------------------------------------------
-| 👑 PREMIUM / AUTH
+| ❤️ Favorites / History (PREMIUM)
 |--------------------------------------------------------------------------
 */
 Route::middleware(['auth', 'premium'])->group(function () {
@@ -164,6 +204,15 @@ Route::middleware('auth')->group(function () {
 
 /*
 |--------------------------------------------------------------------------
+| 📚 Static sections (menu-ready)
+|--------------------------------------------------------------------------
+*/
+Route::view('/anime', 'sections.anime')->name('anime.index');
+Route::view('/cartoons', 'sections.cartoons')->name('cartoons.index');
+Route::view('/documentary', 'sections.documentary')->name('documentary.index');
+
+/*
+|--------------------------------------------------------------------------
 | 🛠 Admin
 |--------------------------------------------------------------------------
 */
@@ -187,7 +236,7 @@ Route::middleware(['auth', 'admin'])
 
 /*
 |--------------------------------------------------------------------------
-| Auth (Breeze)
+| 🔐 Auth (Breeze)
 |--------------------------------------------------------------------------
 */
 require __DIR__ . '/auth.php';

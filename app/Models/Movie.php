@@ -8,6 +8,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 
 class Movie extends Model
 {
@@ -49,6 +51,7 @@ class Movie extends Model
         'rating_imdb',
         'rating_color',
         'duration_human',
+        'is_favorited',
     ];
 
     /* ================= Relations ================= */
@@ -91,10 +94,6 @@ class Movie extends Model
         return $this->morphMany(Favorite::class, 'favoritable');
     }
 
-    /**
-     * ▶ Прогресс просмотра сериала (для Resume)
-     * Только связь, фильтрация по user_id — в контроллере
-     */
     public function watchProgress(): HasOne
     {
         return $this->hasOne(WatchProgress::class, 'series_id');
@@ -115,6 +114,33 @@ class Movie extends Model
     public function scopeSeries(Builder $query): Builder
     {
         return $query->where('is_series', true);
+    }
+
+    // 🆕 Новинки
+    public function scopeLatest(Builder $query): Builder
+    {
+        return $query->orderByDesc('created_at');
+    }
+
+    // 🆕 Популярные (по избранному)
+    public function scopePopular(Builder $query): Builder
+    {
+        return $query->withCount('favorites')
+            ->orderByDesc('favorites_count');
+    }
+
+    // 🆕 По жанру
+    public function scopeByGenre(Builder $query, string $slug): Builder
+    {
+        return $query->whereHas('genres', fn ($q) =>
+            $q->where('slug', $slug)
+        );
+    }
+
+    // 🆕 По году
+    public function scopeByYear(Builder $query, int $year): Builder
+    {
+        return $query->where('year', $year);
     }
 
     /* ================= Accessors ================= */
@@ -163,5 +189,17 @@ class Movie extends Model
             $this->rating >= 7.0 => 'text-amber-400',
             default              => 'text-slate-300',
         };
+    }
+
+    // ❤️ Для UI (избранное)
+    public function getIsFavoritedAttribute(): bool
+    {
+        if (!Auth::check()) {
+            return false;
+        }
+
+        return $this->favorites()
+            ->where('user_id', Auth::id())
+            ->exists();
     }
 }
